@@ -8,9 +8,9 @@
   --color-text: #2d1b4e;
   --color-text-light: #ffffff;
   --color-surface: rgba(255,255,255,0.92);
-  --color-accent: #ff6b9d;
-  --color-accent-hover: #ff4785;
-  --color-p1: #ff6b9d;
+  --color-accent: #f0579a;
+  --color-accent-hover: #d94089;
+  --color-p1: #f0579a;
   --color-p2: #6ba4ff;
   --text-xs: 11px;
   --text-sm: 13px;
@@ -135,7 +135,7 @@ h1 {
 #code-input::placeholder { letter-spacing: 0.15em; opacity: 0.3; }
 
 .controls-hint { font-size: var(--text-xs); color: var(--color-text); opacity: 0.35; margin-top: var(--space-4); }
-.menu-version { position: absolute; bottom: 12px; right: 16px; font-size: 11px; color: var(--color-text); opacity: 0.25; margin: 0; }
+.menu-version { position: absolute; bottom: 14px; right: 18px; font-size: 13px; color: var(--color-text); opacity: 0.5; margin: 0; }
 .menu-error { color: #e74c3c; font-size: var(--text-sm); font-weight: 500; margin-top: var(--space-2); }
 
 /* === LOBBY === */
