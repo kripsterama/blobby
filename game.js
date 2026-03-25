@@ -184,12 +184,14 @@ class GameInstance {
     }
     this.collectibles=this.collectibles.filter(c=>c.x>-30&&!c.collected);
 
-    // collision
-    for(const o of this.obstacles){
-      const hb={x:p.x+5,y:p.y+3,w:p.w-10,h:p.h-5};
-      const ob={x:o.x+3,y:o.y+3,w:o.w-6,h:o.h-3};
-      if(hb.x<ob.x+ob.w&&hb.x+hb.w>ob.x&&hb.y<ob.y+ob.h&&hb.y+hb.h>ob.y){
-        this.die(); return;
+    // collision (skipped for ghost/remote instances — alive state driven by network)
+    if (!this.ghost) {
+      for(const o of this.obstacles){
+        const hb={x:p.x+5,y:p.y+3,w:p.w-10,h:p.h-5};
+        const ob={x:o.x+3,y:o.y+3,w:o.w-6,h:o.h-3};
+        if(hb.x<ob.x+ob.w&&hb.x+hb.w>ob.x&&hb.y<ob.y+ob.h&&hb.y+hb.h>ob.y){
+          this.die(); return;
+        }
       }
     }
 
@@ -355,11 +357,28 @@ function handlePeerData(raw) {
       seed = msg.seed;
       startMultiGame();
       break;
-    case 'state':
-      if (localInstance) localInstance.opponentData = msg.data;
-      updateRemoteHUD(msg.data);
+    case 'state': {
+      const d = msg.data;
+      if (remoteInstance) {
+        // Fast-forward world to match opponent's scroll distance (corrects startup offset)
+        const step = 1/60;
+        let guard = 0;
+        while (remoteInstance.distance < d.distance && guard++ < 200) {
+          remoteInstance.update(step);
+        }
+        // Override player state from network
+        remoteInstance.player.y = d.y;
+        remoteInstance.player.vy = d.vy;
+        remoteInstance.player.grounded = d.grounded;
+        remoteInstance.alive = d.alive;
+        remoteInstance.score = d.score;
+      }
+      if (localInstance) localInstance.opponentData = d;
+      updateRemoteHUD(d);
       break;
+    }
     case 'died':
+      if (remoteInstance) remoteInstance.alive = false;
       if (localInstance && localInstance.opponentData) localInstance.opponentData.alive = false;
       break;
     case 'restart':
@@ -554,6 +573,13 @@ function startMultiGame() {
   const rng1 = mulberry32(seed);
   localInstance = new GameInstance(canvasTop, ctxTop, myPlayer===1?'p1':'p2', rng1);
   localInstance.opponentData = null;
+
+  // Remote instance uses the same seed — deterministic world stays in sync.
+  // Player position is overridden by network state; ghost=true skips local collision.
+  const rng2 = mulberry32(seed);
+  remoteInstance = new GameInstance(canvasBot, ctxBot, myPlayer===1?'p2':'p1', rng2);
+  remoteInstance.ghost = true;
+
   gameRunning = true;
   resizeGame();
   localInstance.positionEntities();
@@ -577,10 +603,10 @@ function resizeGame() {
   } else {
     const halfH = Math.floor((fullH - 3) / 2);
     localInstance.resize(W, halfH);
-    const dpr = Math.min(devicePixelRatio||1,2);
-    canvasBot.width = W * dpr; canvasBot.height = halfH * dpr;
-    canvasBot.style.width = W+'px'; canvasBot.style.height = halfH+'px';
-    ctxBot.setTransform(dpr,0,0,dpr,0,0);
+    if (remoteInstance) {
+      remoteInstance.resize(W, halfH);
+      remoteInstance.positionEntities();
+    }
   }
   if(localInstance) localInstance.positionEntities();
 }
@@ -681,35 +707,8 @@ function showGameOver() {
 
 // === Draw Remote Half ===
 function drawRemoteHalf() {
-  const ctx = ctxBot;
-  const W = canvasBot.width / (Math.min(devicePixelRatio||1,2));
-  const H = canvasBot.height / (Math.min(devicePixelRatio||1,2));
-  const gY = H * (1 - GROUND_RATIO);
-
-  const gr=ctx.createLinearGradient(0,0,0,gY);gr.addColorStop(0,C.skyTop);gr.addColorStop(1,C.skyBot);ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
-
-  ctx.fillStyle=C.cloud;ctx.globalAlpha=0.6;
-  ctx.beginPath();ctx.ellipse(W*0.15,30,60,20,0,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.ellipse(W*0.6,50,80,25,0,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.ellipse(W*0.85,20,50,18,0,0,Math.PI*2);ctx.fill();
-  ctx.globalAlpha=1;
-
-  ctx.fillStyle=C.hillFar;ctx.beginPath();ctx.moveTo(0,gY);ctx.quadraticCurveTo(W*0.3,gY-80,W*0.6,gY);ctx.fill();
-  ctx.fillStyle=C.hillNear;ctx.beginPath();ctx.moveTo(W*0.4,gY);ctx.quadraticCurveTo(W*0.7,gY-60,W,gY);ctx.fill();
-
-  ctx.fillStyle=C.ground;ctx.fillRect(0,gY,W,H-gY);
-  ctx.fillStyle=C.groundDk;ctx.fillRect(0,gY,W,3);
-
-  const oppData = localInstance ? localInstance.opponentData : null;
-  if(oppData) {
-    const oppCol = myPlayer===1?'p2':'p1';
-    const bx = W*0.16;
-    const by = oppData.grounded ? gY - PLAYER_SIZE : Math.min(oppData.y * (H / (localInstance.H||H)), gY - PLAYER_SIZE);
-    const inst = new GameInstance(canvasBot, ctxBot, oppCol, mulberry32(1));
-    inst.drawBlob(ctx, bx, by, PLAYER_SIZE, oppCol, oppData.alive ? 1 : 0.3, 0, 1, 1, oppData.grounded, 0);
-  } else {
-    ctx.fillStyle='rgba(45,27,78,0.3)';ctx.font='500 14px General Sans, sans-serif';ctx.textAlign='center';
-    ctx.fillText('Waiting for opponent...', W/2, H/2);
+  if (remoteInstance) {
+    remoteInstance.draw();
   }
 }
 
@@ -745,6 +744,11 @@ function loop(ts) {
     // Update local HUD
     $('score-top').textContent = localInstance.score;
     $('dist-top').textContent = Math.floor(localInstance.distance)+'m';
+  }
+
+  // Update remote world (same dt = same deterministic world as local)
+  if(mode==='multi' && remoteInstance && remoteInstance.alive) {
+    remoteInstance.update(dt);
   }
 
   // Check death
