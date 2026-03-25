@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+   ______                            __
+  / ____/___  ____ ___  ____  __  __/ /____  _____
+ / /   / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
+/ /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
+\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+                    /_/
+        Created with Perplexity Computer
+        https://www.perplexity.ai/computer
+-->
+<meta name="generator" content="Perplexity Computer">
+<meta name="author" content="Perplexity Computer">
+<meta property="og:see_also" content="https://www.perplexity.ai/computer">
+<link rel="author" href="https://www.perplexity.ai/computer">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Blobby Run</title>
+<link href="https://api.fontshare.com/v2/css?f[]=chillax@400,500,600,700&f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./style.css">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body>
+
+<!-- MENU SCREEN -->
+<div id="menu-screen">
+  <div class="menu-bg-canvas-wrap"><canvas id="menuBgCanvas"></canvas></div>
+  <div class="menu-content">
+    <div class="title-blob-container"><div class="title-blob"></div></div>
+    <h1>Blobby Run</h1>
+    <p class="subtitle">Hop, collect, and run as far as you can</p>
+    <div class="menu-buttons">
+      <button id="solo-btn" class="menu-btn primary-btn">Solo Play</button>
+      <button id="create-btn" class="menu-btn secondary-btn">Create Room</button>
+      <div class="join-row">
+        <input id="code-input" type="text" maxlength="4" placeholder="CODE" autocomplete="off" spellcheck="false">
+        <button id="join-btn" class="menu-btn secondary-btn">Join</button>
+      </div>
+    </div>
+    <p class="controls-hint">Tap or Space to jump</p>
+    <p id="menu-error" class="menu-error hidden"></p>
+  </div>
+</div>
+
+<!-- LOBBY SCREEN (waiting for player 2) -->
+<div id="lobby-screen" class="hidden">
+  <div class="lobby-content">
+    <h2 id="lobby-status">Waiting for Player 2</h2>
+    <p class="lobby-instruction">Share this code with a friend:</p>
+    <div id="room-code" class="room-code">----</div>
+    <p class="lobby-hint">They open the same page and enter this code to join</p>
+    <div class="loader-dots"><span></span><span></span><span></span></div>
+    <button id="lobby-cancel" class="menu-btn text-btn">Cancel</button>
+  </div>
+</div>
+
+<!-- GAME AREA -->
+<div id="game-area" class="hidden">
+  <div id="split-top" class="split-half">
+    <canvas id="canvas-top"></canvas>
+    <div class="split-hud">
+      <div class="hud-pill"><span class="hud-label">P1</span><span class="hud-badge p1-badge">YOU</span></div>
+      <div class="hud-pill"><span class="hud-label">SCORE</span><span id="score-top" class="hud-val">0</span></div>
+      <div class="hud-pill"><span class="hud-label">DIST</span><span id="dist-top" class="hud-val">0m</span></div>
+    </div>
+  </div>
+  <div id="split-divider" class="hidden"></div>
+  <div id="split-bottom" class="split-half hidden">
+    <canvas id="canvas-bottom"></canvas>
+    <div class="split-hud">
+      <div class="hud-pill"><span class="hud-label">P2</span><span class="hud-badge p2-badge">OPP</span></div>
+      <div class="hud-pill"><span class="hud-label">SCORE</span><span id="score-bottom" class="hud-val">0</span></div>
+      <div class="hud-pill"><span class="hud-label">DIST</span><span id="dist-bottom" class="hud-val">0m</span></div>
+    </div>
+  </div>
+  <div id="sound-toggle" role="button" tabindex="0" aria-label="Toggle sound">
+    <svg id="sound-on-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
+    <svg id="sound-off-icon" class="hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+  </div>
+</div>
+
+<!-- GAME OVER OVERLAY -->
+<div id="game-over-screen" class="hidden">
+  <div class="gameover-content">
+    <h2 id="gameover-title">Game Over</h2>
+    <div class="final-stats">
+      <div class="stat-row"><span class="stat-name">Your Score</span><span id="final-score" class="stat-val">0</span></div>
+      <div class="stat-row"><span class="stat-name">Distance</span><span id="final-distance" class="stat-val">0m</span></div>
+      <div class="stat-row" id="opp-score-row"><span class="stat-name">Opponent</span><span id="final-opp-score" class="stat-val">-</span></div>
+      <div class="stat-row best-row"><span class="stat-name">Best</span><span id="best-score" class="stat-val">0</span></div>
+    </div>
+    <button id="restart-btn" class="menu-btn primary-btn">Play Again</button>
+    <button id="back-menu-btn" class="menu-btn text-btn">Back to Menu</button>
+  </div>
+</div>
+
+<footer class="game-footer">
+  <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">Created with Perplexity Computer</a>
+</footer>
+
+<script src="./game.js"></script>
+</body>
+</html>
