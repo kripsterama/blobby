@@ -8,9 +8,9 @@
   --color-text: #2d1b4e;
   --color-text-light: #ffffff;
   --color-surface: rgba(255,255,255,0.92);
-  --color-accent: #f0579a;
-  --color-accent-hover: #d94089;
-  --color-p1: #f0579a;
+  --color-accent: #e0509e;
+  --color-accent-hover: #c93d8e;
+  --color-p1: #e0509e;
   --color-p2: #6ba4ff;
   --text-xs: 11px;
   --text-sm: 13px;
@@ -102,12 +102,14 @@ h1 {
   border-radius: var(--radius-full);
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   min-height: 46px;
+  -webkit-appearance: none;
+  appearance: none;
 }
 .menu-btn:active { transform: scale(0.96); }
 .primary-btn {
   font-size: var(--text-lg); color: var(--color-text-light);
   background: var(--color-accent); padding: var(--space-3) var(--space-8);
-  box-shadow: 0 4px 16px rgba(255,107,157,0.4); min-width: 200px;
+  box-shadow: 0 4px 16px rgba(224,80,158,0.4); min-width: 200px;
 }
 .primary-btn:hover { background: var(--color-accent-hover); transform: translateY(-1px); }
 .secondary-btn {
@@ -135,7 +137,7 @@ h1 {
 #code-input::placeholder { letter-spacing: 0.15em; opacity: 0.3; }
 
 .controls-hint { font-size: var(--text-xs); color: var(--color-text); opacity: 0.35; margin-top: var(--space-4); }
-.menu-version { position: absolute; bottom: 14px; right: 18px; font-size: 13px; color: var(--color-text); opacity: 0.5; margin: 0; }
+.menu-version { position: absolute; bottom: 16px; right: 20px; font-size: 15px; font-weight: 600; color: var(--color-text); opacity: 0.7; margin: 0; }
 .menu-error { color: #e74c3c; font-size: var(--text-sm); font-weight: 500; margin-top: var(--space-2); }
 
 /* === LOBBY === */

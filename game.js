@@ -26,7 +26,7 @@ const C = {
   skyTop:'#7ec8e3', skyBot:'#c9e8f5', cloud:'rgba(255,255,255,0.8)',
   hillFar:'#90d98c', hillNear:'#6abf69', ground:'#6abf69',
   groundDk:'#4a9e49', groundPat:'#5eae5d',
-  p1:'#f0579a', p1Dk:'#d94089', p1Cheek:'#ffb3d0',
+  p1:'#e0509e', p1Dk:'#c93d8e', p1Cheek:'#ffb3d0',
   p2:'#6ba4ff', p2Dk:'#4580e0', p2Cheek:'#b3d4ff',
   eyeW:'#fff', eyeP:'#2d1b4e',
   star:'#ffd700', starGlow:'rgba(255,215,0,0.3)',
