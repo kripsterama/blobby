@@ -316,6 +316,16 @@ let peerReady = false;
 // Generate a short 4-letter room code and derive a PeerJS id from it
 const PEER_PREFIX = 'blobbyrun-';
 function codeToPeerId(code) { return PEER_PREFIX + code.toUpperCase(); }
+const PEER_CONFIG = {
+  debug: 0,
+  config: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+    ]
+  }
+};
 
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I or O to avoid confusion
@@ -384,7 +394,7 @@ function createRoom() {
   showLobby(roomCode);
   $('lobby-status').textContent = 'Connecting...';
 
-  peer = new Peer(peerId, { debug: 0 });
+  peer = new Peer(peerId, PEER_CONFIG);
 
   peer.on('open', () => {
     peerReady = true;
@@ -435,7 +445,7 @@ function joinRoom(code) {
   $('lobby-status').textContent = 'Connecting...';
   $('lobby-instruction').textContent = 'Joining room:';
 
-  peer = new Peer(undefined, { debug: 0 }); // auto-generated id for joiner
+  peer = new Peer(undefined, PEER_CONFIG); // auto-generated id for joiner
 
   peer.on('open', () => {
     peerReady = true;
@@ -753,6 +763,7 @@ function loop(ts) {
 requestAnimationFrame(loop);
 
 // === Test hooks ===
+window._testExports = { generateCode, codeToPeerId, PEER_PREFIX };
 window.render_game_to_text = function(){
   if(!localInstance) return JSON.stringify({phase:'menu'});
   return JSON.stringify({phase:gameRunning?(localInstance.alive?'playing':'dead'):'menu',mode,score:localInstance.score,distance:Math.floor(localInstance.distance),alive:localInstance.alive,opponent:localInstance.opponentData});
