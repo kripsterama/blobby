@@ -250,9 +250,12 @@ class GameInstance {
     // Collectibles
     for(const col of this.collectibles){if(!col.collected){if(col.type==='gem')this.drawGem(ctx,col);else this.drawStar(ctx,col);}}
 
-    // Opponent ghost (if nearby)
+    // Opponent ghost (if nearby) — use airGap to derive y on this canvas's groundY
     if(this.opponentData && this.opponentData.alive) {
-      this.drawBlob(ctx, this.opponentData.x, this.opponentData.y, PLAYER_SIZE, this.pColor==='p1'?'p2':'p1', 0.4, 0);
+      const ghostX = this.W * 0.16;
+      const ghostAirGap = this.opponentData.airGap || 0;
+      const ghostY = this.groundY - PLAYER_SIZE - ghostAirGap;
+      this.drawBlob(ctx, ghostX, ghostY, PLAYER_SIZE, this.pColor==='p1'?'p2':'p1', 0.4, 0);
     }
 
     // Player
@@ -379,6 +382,7 @@ function handlePeerData(raw) {
         remoteInstance.alive = d.alive;
         remoteInstance.score = d.score;
       }
+      lastRemoteState = d;
       if (localInstance) localInstance.opponentData = d;
       updateRemoteHUD(d);
       break;
@@ -500,6 +504,7 @@ let gameRunning = false;
 let localInstance = null;
 let remoteInstance = null;
 let seed = 42;
+let lastRemoteState = null;
 
 // Menu bg clouds
 let menuClouds = [];
@@ -715,6 +720,25 @@ function showGameOver() {
 function drawRemoteHalf() {
   if (remoteInstance) {
     remoteInstance.draw();
+    // DEBUG OVERLAY — remove once position bug is diagnosed
+    const ctx = ctxBot;
+    const p = remoteInstance.player;
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.72)';
+    ctx.fillRect(0, 0, 240, 78);
+    ctx.fillStyle = '#fff';
+    ctx.font = '11px monospace';
+    const gY = Math.round(remoteInstance.groundY);
+    const pY = Math.round(p.y);
+    const feet = Math.round(p.y + p.h);
+    ctx.fillText(`H=${remoteInstance.H}  gndY=${gY}`, 5, 14);
+    ctx.fillText(`p.y=${pY}  feet=${feet}  gap=${gY-feet}`, 5, 28);
+    ctx.fillText(`p.grnd=${p.grounded}  vy=${Math.round(p.vy)}`, 5, 42);
+    if (lastRemoteState) {
+      ctx.fillText(`rcv airGap=${lastRemoteState.airGap}  gnd=${lastRemoteState.grounded}`, 5, 56);
+      ctx.fillText(`rcv dist=${Math.round(lastRemoteState.distance)}  alive=${lastRemoteState.alive}`, 5, 70);
+    }
+    ctx.restore();
   }
 }
 
