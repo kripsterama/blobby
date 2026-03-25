@@ -213,7 +213,10 @@ class GameInstance {
 
   getState(){
     const p=this.player;
-    return{x:Math.round(p.x),y:Math.round(p.y),vy:Math.round(p.vy),grounded:p.grounded,alive:this.alive,score:this.score,distance:Math.floor(this.distance)};
+    // Send airGap (pixels above ground) instead of raw y so it maps correctly
+    // onto any screen size on the receiving end.
+    const airGap = Math.round(this.groundY - (p.y + p.h));
+    return{airGap,vy:Math.round(p.vy),grounded:p.grounded,alive:this.alive,score:this.score,distance:Math.floor(this.distance)};
   }
 
   // === DRAWING ===
@@ -366,10 +369,13 @@ function handlePeerData(raw) {
         while (remoteInstance.distance < d.distance && guard++ < 200) {
           remoteInstance.update(step);
         }
-        // Override player state from network
-        remoteInstance.player.y = d.y;
-        remoteInstance.player.vy = d.vy;
-        remoteInstance.player.grounded = d.grounded;
+        // Override player state from network.
+        // Derive y from airGap so it maps correctly onto this screen's groundY.
+        const p = remoteInstance.player;
+        p.y = remoteInstance.groundY - p.h - d.airGap;
+        p.vy = d.vy;
+        p.grounded = d.grounded;
+        if (d.grounded) { p.y = remoteInstance.groundY - p.h; p.vy = 0; }
         remoteInstance.alive = d.alive;
         remoteInstance.score = d.score;
       }
