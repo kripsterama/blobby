@@ -416,8 +416,11 @@ function createRoom() {
 
 function startAsHost() {
   seed = Math.floor(Math.random() * 999999);
-  peerSend({ type: 'game_start', seed });
-  startMultiGame();
+  $('lobby-status').textContent = 'Player 2 joined! Starting...';
+  setTimeout(() => {
+    peerSend({ type: 'game_start', seed });
+    startMultiGame();
+  }, 500);
 }
 
 function joinRoom(code) {
@@ -428,6 +431,10 @@ function joinRoom(code) {
 
   const hostPeerId = codeToPeerId(roomCode);
 
+  showLobby(roomCode);
+  $('lobby-status').textContent = 'Connecting...';
+  $('lobby-instruction').textContent = 'Joining room:';
+
   peer = new Peer(undefined, { debug: 0 }); // auto-generated id for joiner
 
   peer.on('open', () => {
@@ -435,12 +442,13 @@ function joinRoom(code) {
     const c = peer.connect(hostPeerId, { reliable: true });
     setupConnection(c);
     c.on('open', () => {
-      // Connected — host will send game_start
-      $('menu-error').classList.add('hidden');
+      // Connected — waiting for host to send game_start
+      $('lobby-status').textContent = 'Connected! Waiting for host...';
     });
   });
 
   peer.on('error', (err) => {
+    showScreen(menuScreen);
     if (err.type === 'peer-unavailable') {
       showMenuError('Room not found. Check the code.');
     } else {
@@ -617,6 +625,7 @@ $('code-input').addEventListener('keydown',(e)=>{
 
 $('lobby-cancel').addEventListener('click',()=>{
   destroyPeer();
+  $('lobby-instruction').textContent = 'Share this code with a friend:';
   showScreen(menuScreen);
 });
 
