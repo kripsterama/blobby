@@ -173,7 +173,7 @@ class GameInstance {
     for(const col of this.collectibles){
       col.x-=this.speed*dt;col.bob+=dt*3;col.sparkle+=dt;
       col.y=this.groundY-col.floatH;
-      if(!col.collected){
+      if(!col.collected && !this.ghost){
         const cy=col.y+Math.sin(col.bob)*6;
         if(this.circHit(col.x,cy,col.r,p.x+4,p.y+4,p.w-8,p.h-8)){
           col.collected=true;const v=col.type==='gem'?GEM_VAL:STAR_VAL;this.score+=v;
@@ -366,12 +366,6 @@ function handlePeerData(raw) {
     case 'state': {
       const d = msg.data;
       if (remoteInstance) {
-        // Fast-forward world to match opponent's scroll distance (corrects startup offset)
-        const step = 1/60;
-        let guard = 0;
-        while (remoteInstance.distance < d.distance && guard++ < 200) {
-          remoteInstance.update(step);
-        }
         // Override player state from network.
         // Derive y from airGap so it maps correctly onto this screen's groundY.
         const p = remoteInstance.player;
@@ -720,25 +714,6 @@ function showGameOver() {
 function drawRemoteHalf() {
   if (remoteInstance) {
     remoteInstance.draw();
-    // DEBUG OVERLAY — remove once position bug is diagnosed
-    const ctx = ctxBot;
-    const p = remoteInstance.player;
-    ctx.save();
-    ctx.fillStyle = 'rgba(0,0,0,0.72)';
-    ctx.fillRect(0, 0, 240, 78);
-    ctx.fillStyle = '#fff';
-    ctx.font = '11px monospace';
-    const gY = Math.round(remoteInstance.groundY);
-    const pY = Math.round(p.y);
-    const feet = Math.round(p.y + p.h);
-    ctx.fillText(`H=${remoteInstance.H}  gndY=${gY}`, 5, 14);
-    ctx.fillText(`p.y=${pY}  feet=${feet}  gap=${gY-feet}`, 5, 28);
-    ctx.fillText(`p.grnd=${p.grounded}  vy=${Math.round(p.vy)}`, 5, 42);
-    if (lastRemoteState) {
-      ctx.fillText(`rcv airGap=${lastRemoteState.airGap}  gnd=${lastRemoteState.grounded}`, 5, 56);
-      ctx.fillText(`rcv dist=${Math.round(lastRemoteState.distance)}  alive=${lastRemoteState.alive}`, 5, 70);
-    }
-    ctx.restore();
   }
 }
 
